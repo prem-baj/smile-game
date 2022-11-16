@@ -1,30 +1,26 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
+from decorators import token_required
+from werkzeug.security import generate_password_hash, check_password_hash
+import jwt
+import datetime
 import requests
+import answer
+import users
 import random
-import psycopg2
-
 app = Flask(__name__)
 CORS(app)
+app.config['SECRET_KEY']='004f2af45d3a4e161a7dd2d17fdae47f'
 
-def get_db_connection():
-    conn = psycopg2.connect(
-        host='localhost',
-        database='smile-game',
-        user="",
-        password=""
-    )
-    return conn
+@app.route('/register', methods=['POST'])
+def signup_user(): 
+    data = request.get_json() 
+    hashed_password = generate_password_hash(data['password'], method='sha256')
+    users.register(data['name'], hashed_password)
+    return jsonify({'message': 'registered successfully'})
 
-
-@app.route('/get_quiz')
-def get_random_quiz():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("select version()")
-    data = cur.fetchone()
-    print("Connection established to: ",data)
-    print(cur)
+@app.route('/quiz')
+def generate_quiz():
     res = requests.get('https://marcconrad.com/uob/smile/api.php?out=json&base64=no').json()
     solution = res.get("solution")
     answers = [solution]
@@ -32,17 +28,22 @@ def get_random_quiz():
         random_num = random.randint(0, 9)
         if not random_num == solution:
             answers.append(random_num)
-
+    
     random.shuffle(answers)
     
     result = {
         "question": res.get("question"),
         "answers": answers
     }
+    # answer.create(solution)
+    answer.remove_last_if_exist()
+    answer.create(solution)
+
     return jsonify(result)
 
 
-@app.route('/post_answer/', methods=['POST'])
-def add_income():
-    incomes.append(request.get_json())
-    return '', 204
+@app.route('/quiz/answer/<solution>', methods=['POST'])
+def post_answer_solution(solution):
+    _, correct_solution = answer.get_actual()
+    answer.update(solution)
+    return jsonify({"correct": correct_solution == int(solution)}), 201

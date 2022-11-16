@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import psycopg2
-
+from db_driver import get_db_connection
 def create_tables():
     """ create tables in the PostgreSQL database"""
     commands = (
@@ -9,19 +9,21 @@ def create_tables():
         CREATE TABLE answers (
             id SERIAL PRIMARY KEY,
             solution INTEGER NOT NULL,
-            answer INTEGER
+            answer INTEGER,
+            user_id INTEGER NOT NULL
         )
-        """,)
+        """,
+        """
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(63) NOT NULL,
+            password VARCHAR(63) NOT NULL
+        )
+        """,    
+    )
     conn = None
     try:
-        # read the connection parameters
-        # connect to the PostgreSQL server
-        conn = psycopg2.connect(
-            host='localhost',
-            database='smile-game',
-            user="",
-            password=""
-        )
+        conn = get_db_connection()
         cur = conn.cursor()
         # create table one by one
         for command in commands:
