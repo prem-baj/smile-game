@@ -1,45 +1,75 @@
 <template>
   <v-app>
-    <v-app-bar
-      app
-      color="primary"
-      dark
-    >
-      <div class="d-flex align-center">
-        <span class="mr-2">Smile Game</span>
-        
-      </div>
+    <v-toolbar>
+      <v-toolbar-title>Smile Game</v-toolbar-title>
 
       <v-spacer></v-spacer>
 
-      <v-btn
-        href="https://github.com/vuetifyjs/vuetify/releases/latest"
-        target="_blank"
-        text
-      >
-        <span class="mr-2">Latest Release</span>
-        <v-icon>mdi-open-in-new</v-icon>
-      </v-btn>
-    </v-app-bar>
+      <v-menu v-if="currentUser" offset-y>
+        <template v-slot:activator="{ attrs, on }">
+          <v-btn color="green" class="white--text ma-5" v-bind="attrs" v-on="on">
+            {{ currentUser.username }}
+          </v-btn>
+        </template>
+
+        <v-list>
+          <v-list-item
+            v-for="item in loggedOptions"
+            :key="item.id"
+            link
+            @click="item.onClick"
+          >
+            <v-list-item-title v-text="item.text"></v-list-item-title>
+            <v-list-item-icon>
+              <v-icon v-text="item.icon"></v-icon>
+            </v-list-item-icon>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+      <div v-else>
+        <v-btn color="green" class="white--text" @click="$router.push('/register')">
+          Register
+        </v-btn>
+        <v-btn color="green" class="white--text mx-2" @click="$router.push('/login')">
+          Login
+        </v-btn>
+      </div>
+    </v-toolbar>
 
     <v-main>
-      <HelloWorld/>
+      <!-- Provides the application the proper gutter -->
+      <v-container fluid>
+        <router-view />
+      </v-container>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld';
-
 export default {
-  name: 'App',
-
-  components: {
-    HelloWorld,
+  name: "app",
+  data() {
+    return {
+      loggedOptions: [
+        {
+          id: "log-out",
+          text: "Log out",
+          icon: "mdi-exit-to-app",
+          onClick: () => this.$store.dispatch("auth/logout"),
+        },
+      ],
+    };
   },
-
-  data: () => ({
-    //
-  }),
+  computed: {
+    currentUser() {
+      return this.$store.state.auth.user;
+    },
+  },
+  methods: {
+    logOut() {
+      this.$store.dispatch("auth/logout");
+      this.$router.push("/login");
+    },
+  },
 };
 </script>

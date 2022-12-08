@@ -1,6 +1,6 @@
 from db_driver import get_db_connection
 
-def create(solution, answer=None, user_id=1):
+def create(solution, user_id, answer=None):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -14,8 +14,7 @@ def create(solution, answer=None, user_id=1):
     conn.close()
     return id
 
-def update(answer=None,user_id=1):
-    print("answer", answer)
+def update(user_id, answer=None):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -28,21 +27,21 @@ def update(answer=None,user_id=1):
     conn.close()
     return id
 
-def get_actual(user_id=1):
+def get_actual(user_id):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
         'SELECT id, solution FROM answers WHERE answer IS NULL AND user_id = %s',
         (user_id,)
     )
-    dupa = cur.fetchone()
+    data = cur.fetchone()
     
     conn.commit()
     cur.close()
     conn.close()
-    return dupa
+    return data
 
-def remove_last_if_exist(user_id=1):
+def remove_last_if_exist(user_id):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute(
@@ -54,3 +53,16 @@ def remove_last_if_exist(user_id=1):
     cur.close()
     conn.close()
     return rows_deleted
+
+def count_correct(user_id):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute(
+        'SELECT COUNT(*) FROM answers WHERE answer = solution AND user_id = %s',
+        (user_id,)
+    )
+    data = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return data[0]

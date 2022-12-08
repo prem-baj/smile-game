@@ -5,7 +5,7 @@
           Loading your quizz
         </p>
         <v-row v-else>
-
+          <p>Correct answers: {{correctCount}}</p>
           <v-col cols="12">
             <v-img
               contain
@@ -76,7 +76,7 @@
 </template>
 
 <script>
-  import axios from 'axios';
+  import UserService from '../services/user.service'
   export default {
     name: 'HelloWorld',
 
@@ -88,6 +88,7 @@
       answered: false,
       answeredCorrect: false,
       selectedAnswerNum: null,
+      correctCount: 0
     }),
     methods: {
     async setQuiz() {
@@ -95,24 +96,40 @@
       this.answeredCorrect = false
       this.selectedAnswerNum = null;
       this.loading = true;
-      const res = await axios.get("http://localhost:5000/quiz");
+      const res = await await UserService.getQuiz()
       this.loading = false;
       console.log(res.data);
       this.imageSrc = res.data.question;
       this.answers = res.data.answers;
+      this.correctCount = res.data.correct_count;
     },
     async submitSolution(num) {
       this.selectedAnswerNum = num
       const solution = this.answers[num]
       this.submiting = true;
-      const res = await axios.post(`http://localhost:5000/quiz/answer/${solution}`);
+      // const res = await axios.post(`http://localhost:5000/quiz/answer/${solution}`);
+      const res = await UserService.submitSolution(solution)
       this.submiting = false;
-      console.log(res.data);
       this.answered = true;
       this.answeredCorrect = res.data.correct
     }
   },
+  computed: {
+    loggedIn() {
+      return this.$store.state.auth.status.loggedIn;
+    },
+  },
+  watch: {
+    loggedIn(val) {
+      if (!val) {
+            this.$router.push('/login');
+      }
+    }
+  },
   created() {
+    if (!this.loggedIn) {
+      this.$router.push('/login');
+    }
     this.setQuiz()
   }
   }

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import psycopg2
 from db_driver import get_db_connection
@@ -17,7 +17,7 @@ def create_tables():
         CREATE TABLE users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(63) NOT NULL,
-            password VARCHAR(63) NOT NULL
+            password VARCHAR(127) NOT NULL
         )
         """,    
     )
